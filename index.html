@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow Timer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Theme Colors */
+        :root {
+            --color-bg-deep: #0E0E34;
+            --color-bg-medium: #1a1a4a;
+            --color-border-light: #252E8A;
+            --color-border-medium: #252E8A;
+            --color-accent: #5A7FCB;
+            --color-accent-dark: #3b5998;
+            --color-text-light: #F7F6F7;
+            --color-text-dim: #a0aec0; /* gray-400 */
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--color-bg-deep);
+            color: var(--color-text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        /* Custom scrollbar for task list */
+        .task-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .task-list-container::-webkit-scrollbar-track {
+            background: var(--color-border-medium);
+            border-radius: 4px;
+        }
+        .task-list-container::-webkit-scrollbar-thumb {
+            background: var(--color-accent);
+            border-radius: 4px;
+        }
+        .task-list-container::-webkit-scrollbar-thumb:hover {
+            opacity: 0.8;
+        }
+
+        /* Main application container styling */
+        .main-container {
+            background-color: var(--color-bg-medium);
+            border: 1px solid var(--color-accent);
+            box-shadow: 0 0 25px rgba(var(--color-accent-rgb), 0.3);
+            border-radius: 0.75rem; /* 12px */
+        }
+        
+        /* Module base style */
+        .module {
+            background-color: rgba(14, 14, 52, 0.5); /* #0E0E34 with alpha */
+            border: 1px solid var(--color-border-medium);
+            border-radius: 0.5rem; /* 8px */
+            min-height: 150px;
+        }
+
+        /* Timer display font */
+        .timer-display {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .timer-accent-color {
+            color: var(--color-accent-dark);
+        }
+        
+        /* Button Styles */
+        .btn {
+            border-radius: 0.5rem; /* 8px */
+            transition: all 0.2s ease-in-out;
+            font-weight: 600;
+            border: 2px solid var(--color-accent);
+            background-color: transparent;
+            color: var(--color-accent);
+            padding: 0.5rem 1rem;
+        }
+        .btn:hover {
+            background-color: var(--color-accent);
+            color: var(--color-text-light);
+        }
+        .btn:disabled {
+            border-color: var(--color-border-light);
+            color: var(--color-border-light);
+            cursor: not-allowed;
+            background-color: transparent;
+        }
+        .btn.active {
+            background-color: var(--color-accent);
+            color: var(--color-text-light);
+            font-weight: 700;
+        }
+        
+        /* Input Styles */
+        .input-field {
+            background-color: var(--color-bg-deep);
+            border: 1px solid var(--color-border-light);
+            border-radius: 0.375rem; /* 6px */
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+            color: var(--color-text-light);
+            transition: border-color 0.2s;
+            /* Remove number spinners */
+            -moz-appearance: textfield;
+        }
+        .input-field::-webkit-outer-spin-button,
+        .input-field::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-field:focus {
+            border-color: var(--color-accent);
+            outline: none;
+            box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.3);
+        }
+        
+        /* Task item styling */
+        .task-item {
+            background-color: var(--color-border-medium);
+            border: 1px solid var(--color-border-medium);
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            transition: all 0.2s;
+        }
+        
+        /* Active task styling */
+        .task-item.active {
+            border-color: var(--color-accent);
+            background-color: rgba(var(--color-accent-rgb), 0.1);
+            box-shadow: 0 0 15px rgba(var(--color-accent-rgb), 0.3);
+        }
+        
+        /* Pad Option Button Styles */
+        .pad-option-btn {
+            min-width: 40px;
+            padding: 0.5rem 0.5rem; /* Smaller padding */
+            font-size: 0.875rem; /* Smaller text */
+        }
+        
+        .header-text { color: var(--color-accent); }
+        .dim-text { color: var(--color-text-dim); }
+        .main-accent-text { color: var(--color-accent); }
+        .main-accent-text-light { color: var(--color-text-light); }
+
+    </style>
+</head>
+<body>
+
+    <!-- Audio Initialization Modal -->
+    <div id="audio-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <div class="main-container p-8 text-center">
+            <h2 class="text-3xl font-bold mb-4 header-text">Welcome to TaskFlow Timer</h2>
+            <p class="text-lg mb-8">Click the button to initialize the application and enable audio alerts.</p>
+            <button id="init-app-btn" class="btn text-xl px-8 py-4">Initialize System</button>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div class="main-container w-full max-w-7xl p-6 md:p-8">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b" style="border-color: var(--color-border-light);">
+            <h1 class="text-4xl font-bold header-text">TaskFlow Timer</h1>
+            <!-- Connect Button -->
+            <button id="connect-launchpad-btn" class="btn px-4 py-2 mt-4 md:mt-0">Connect Pad</button>
+            <!-- Message Area -->
+            <div id="message-box" class="h-8 main-accent-text text-lg timer-display"></div>
+        </header>
+
+        <!-- Top Modules Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            
+            <!-- Module 1: Current Time -->
+            <div class="module p-6 rounded-lg flex flex-col justify-center items-center">
+                <h2 class="text-xl font-semibold dim-text mb-3">Current Time</h2>
+                <div id="current-time-display" class="timer-display text-4xl md:text-5xl font-bold text-center main-accent-text-light">
+                    00:00:00
+                    <span class="text-3xl opacity-80">AM</span>
+                </div>
+            </div>
+
+            <!-- Module 2: Time on Task (Stopwatch) -->
+            <div class="module p-6 rounded-lg">
+                <h2 class="text-xl font-semibold dim-text mb-3 text-center">Time on Task</h2>
+                <div id="time-on-task-display" class="timer-display text-3xl md:text-4xl font-bold text-center mb-4 main-accent-text">
+                    00:00:00<span class="text-2xl timer-accent-color">.000</span>
+                </div>
+                <div class="flex justify-center space-x-2">
+                    <button id="tot-start-pause-btn" class="btn w-24">Start</button>
+                    <button id="tot-reset-btn" class="btn w-24">Reset</button>
+                </div>
+            </div>
+
+            <!-- Module 3: Main Countdown (Timer) - NOW DISPLAY ONLY -->
+            <div class="module p-6 rounded-lg flex flex-col justify-center items-center">
+                <h2 class="text-xl font-semibold dim-text mb-3">Active Task</h2>
+                <div id="countdown-display" class="timer-display text-4xl md:text-5xl font-bold text-center main-accent-text">
+                    60:00<span class="text-3xl timer-accent-color">.000</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Live Pad Control Module -->
+        <div class="module p-6 rounded-lg mb-6">
+            <h2 class="text-2xl font-bold mb-4 pb-4 header-text text-center border-b" style="border-color: var(--color-border-light);">Live Pad Control</h2>
+            <div class="flex flex-wrap gap-x-6 gap-y-4 items-end justify-center">
+                
+                <!-- Column 1: Pad Color -->
+                <div>
+                    <label class="block text-sm font-medium dim-text mb-2">Pad Color</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="btn pad-option-btn pad-color-btn active" data-color-name="Blue" data-color-code="45" data-theme-hex="#5A7FCB">Blue</button>
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="Med Blue" data-color-code="42" data-theme-hex="#4a69bd">Med Blue</button>
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="Lt Blue" data-color-code="37" data-theme-hex="#7aace8">Lt Blue</button>
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="Green" data-color-code="26" data-theme-hex="#2ecc71">Green</button>
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="White" data-color-code="3" data-theme-hex="#F7F6F7">White</button>
+                    </div>
+                </div>
+
+                <!-- Column 2: Pulse Mode -->
+                <div>
+                    <label for="pulse-mode-btn" class="block text-sm font-medium dim-text mb-2">Pulse Mode</label>
+                    <button id="pulse-mode-btn" class="btn pad-option-btn">Mode: Pulse Current</button>
+                </div>
+
+                <!-- Column 3: Pulse Speed -->
+                <div>
+                    <label for="pulse-speed-btn" class="block text-sm font-medium dim-text mb-2">Pulse Speed</label>
+                    <button id="pulse-speed-btn" class="btn pad-option-btn">Speed: Slow</button>
+                </div>
+
+                <!-- Column 4: Task Alarm -->
+                <div>
+                    <label for="task-alarm-btn" class="block text-sm font-medium dim-text mb-2">Task Alarm</label>
+                    <button id="task-alarm-btn" class="btn pad-option-btn active">Flash Pad: On</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Bottom Modules Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Add New Task Module -->
+            <div class="module p-6 rounded-lg">
+                <h2 class="text-2xl font-bold mb-4 header-text">Add Task Module</h2>
+                
+                <div class="space-y-4">
+                    <!-- Quick Task Name -->
+                    <div>
+                        <label class="block text-sm font-medium dim-text mb-1">Quick Task Name</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn quick-name-btn">Task 1</button>
+                            <button class="btn quick-name-btn">Task 2</button>
+                            <button class="btn quick-name-btn">Task 3</button>
+                            <button class="btn quick-name-btn">Task 4</button>
+                            <button class="btn quick-name-btn">Task 5</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Time Add -->
+                    <div>
+                        <label class="block text-sm font-medium dim-text mb-1">Quick Time (minutes)</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn quick-time-add-btn" data-minutes="90">90m</button>
+                            <button class="btn quick-time-add-btn" data-minutes="60">60m</button>
+                            <button class="btn quick-time-add-btn" data-minutes="45">45m</button>
+                            <button class="btn quick-time-add-btn" data-minutes="30">30m</button>
+                            <button class="btn quick-time-add-btn" data-minutes="15">15m</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Task Name -->
+                    <div>
+                        <label for="task-name" class="block text-sm font-medium dim-text mb-1">Custom Task Name</label>
+                        <input type="text" id="task-name" class="input-field" placeholder="e.g., Step 1: Research">
+                    </div>
+                    
+                    <!-- Time (minutes) -->
+                    <div>
+                        <label for="task-time" class="block text-sm font-medium dim-text mb-1">Time (minutes)</label>
+                        <input type="text" id="task-time" class="input-field" value="60" pattern="\d*">
+                    </div>
+                    
+                    <button id="add-task-btn" class="btn w-full py-3 text-lg">Add Task to Queue</button>
+                </div>
+            </div>
+
+            <!-- Task Queue -->
+            <div class="module p-6 rounded-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold header-text">Task Queue</h2>
+                    <button id="start-queue-btn" class="btn px-5 py-2">Start Day</button>
+                </div>
+                <div id="task-list" class="task-list-container h-64 overflow-y-auto space-y-3 pr-2">
+                    <!-- Tasks will be added here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL STATE & DOM ELEMENTS ---
+        let audioContext;
+        let alarmBuffer;
+        let tickBuffer;
+        let messageTimeout;
+        let isAudioInitialized = false;
+
+        const connectLaunchpadBtn = document.getElementById('connect-launchpad-btn');
+        const messageBox = document.getElementById('message-box');
+
+        // Current Time
+        const currentTimeDisplay = document.getElementById('current-time-display');
+
+        // Time on Task (Stopwatch)
+        const totDisplay = document.getElementById('time-on-task-display');
+        const totStartPauseBtn = document.getElementById('tot-start-pause-btn');
+        const totResetBtn = document.getElementById('tot-reset-btn');
+        let totInterval;
+        let totMilliseconds = 0;
+        let totLastTimestamp;
+        let totRunning = false;
+
+        // Main Countdown (Timer)
+        const countdownDisplay = document.getElementById('countdown-display');
+        let countdownInterval;
+        let countdownMilliseconds = 0;
+        let countdownTotalDuration = 0;
+        let countdownStartTime = 0;
+        let cdLastTimestamp;
+        let countdownPaused = true;
+        let timePerPad = 0;
+        let lastPadsLit = -1;
+
+        // Task Module
+        const taskNameInput = document.getElementById('task-name');
+        const taskTimeInput = document.getElementById('task-time');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const taskListDiv = document.getElementById('task-list');
+        const startQueueBtn = document.getElementById('start-queue-btn');
+        let taskQueue = [];
+        let currentTaskIndex = -1;
+
+        // Launchpad
+        let launchpadOutput = null;
+        let midiClockInterval = null;
+        
+        // --- NEW: Live Pad Control State ---
+        let currentPadColor = 45; // Default to Blue
+        let currentPulseMode = 'current'; // 'current', 'row', or 'all'
+        let currentPulseSpeed = 'slow'; // 'slow', 'med', 'fast'
+        let flashOnEnd = true; // Default to On
+        
+        // NEW: Live Pad Control DOM Elements
+        const pulseModeBtn = document.getElementById('pulse-mode-btn');
+        const pulseSpeedBtn = document.getElementById('pulse-speed-btn'); // New single button
+        const taskAlarmBtn = document.getElementById('task-alarm-btn');
+        
+        const COLORS = {
+            OFF: 0,
+        };
+        // The 64-pad grid, in order from top-left to bottom-right
+        const launchpadGridNotes = [
+            81, 82, 83, 84, 85, 86, 87, 88, // Row 0
+            71, 72, 73, 74, 75, 76, 77, 78, // Row 1
+            61, 62, 63, 64, 65, 66, 67, 68, // Row 2
+            51, 52, 53, 54, 55, 56, 57, 58, // Row 3
+            41, 42, 43, 44, 45, 46, 47, 48, // Row 4
+            31, 32, 33, 34, 35, 36, 37, 38, // Row 5
+            21, 22, 23, 24, 25, 26, 27, 28, // Row 6
+            11, 12, 13, 14, 15, 16, 17, 18  // Row 7
+        ];
+        const launchpadCCNotes = [
+            91, 92, 93, 94, 95, 96, 97, 98, 99, // Top row
+            89, 79, 69, 59, 49, 39, 29, 19      // Right column
+        ];
+        
+        // --- INITIALIZATION ---
+        const audioModal = document.getElementById('audio-modal');
+        const initAppBtn = document.getElementById('init-app-btn');
+        
+        initAppBtn.addEventListener('click', () => {
+            initAudio();
+            audioModal.style.display = 'none';
+            isAudioInitialized = true;
+            setDefaultCountdown(60);
+            countdownDisplay.innerHTML = formatTime(60 * 60 * 1000, true);
+        });
+
+        setInterval(updateCurrentTime, 1000);
+        updateCurrentTime();
+        
+        // --- AUDIO FUNCTIONS ---
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                loadSound('https://www.myinstants.com/media/sounds/hollow-what-a-thrill-metal-gear-solid-3.mp3', (buffer) => {
+                    alarmBuffer = buffer;
+                });
+                loadSound('https://sfxcontent.s3.amazonaws.com/sound-effects/pop-drip-click-sound.mp3', (buffer) => {
+                    tickBuffer = buffer;
+                });
+            } catch (e) {
+                console.error("Web Audio API is not supported in this browser", e);
+            }
+        }
+
+        function loadSound(url, callback) {
+            fetch(url)
+                .then(response => response.arrayBuffer())
+                .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+                .then(audioBuffer => callback(audioBuffer))
+                .catch(error => console.error("Error loading sound:", error));
+        }
+
+        function playSound(buffer) {
+            if (!audioContext || !buffer || !isAudioInitialized) return;
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+        }
+
+        function playAlarm() { playSound(alarmBuffer); }
+        function playTick() { playSound(tickBuffer); }
+
+        // --- LAUNCHPAD FUNCTIONS ---
+        connectLaunchpadBtn.addEventListener('click', connectMIDI);
+
+        async function connectMIDI() {
+            if (navigator.requestMIDIAccess) {
+                try {
+                    const midiAccess = await navigator.requestMIDIAccess({ sysex: true });
+                    
+                    launchpadOutput = null;
+                    let possibleOutputs = [];
+                    for (let output of midiAccess.outputs.values()) {
+                        if (output.name.includes("LPMiniMK3 MIDI")) {
+                            launchpadOutput = output;
+                            break; 
+                        }
+                        if (output.name.includes("Launchpad") || output.name.includes("LPMiniMK3")) {
+                            possibleOutputs.push(output);
+                        }
+                    }
+
+                    if (!launchpadOutput && possibleOutputs.length > 0) {
+                        launchpadOutput = possibleOutputs[0];
+                    }
+
+                    if (launchpadOutput) {
+                        showMessage(`Pad Connected: ${launchpadOutput.name}`, "success");
+                        connectLaunchpadBtn.disabled = true;
+                        connectLaunchpadBtn.textContent = "Pad Connected";
+                        
+                        launchpadOutput.send([240, 0, 32, 41, 2, 13, 14, 1, 247]);
+                        
+                        setTimeout(() => {
+                            clearLaunchpadGrid(true); // Deep clear
+                            updateLaunchpadWithStaticTime(); // Show default 60-min state
+                            setMidiClockSpeed(currentPulseSpeed); // Start default slow clock
+                        }, 100);
+
+                    } else {
+                        showMessage("Launchpad not found.", "error");
+                    }
+                } catch (e) {
+                    showMessage("MIDI Access Denied.", "error");
+                    console.error("MIDI Access Denied.", e);
+                }
+            } else {
+                showMessage("Web MIDI not supported.", "error");
+            }
+        }
+        
+        function setMidiClockSpeed(speed) {
+            if (midiClockInterval) clearInterval(midiClockInterval);
+            if (!launchpadOutput) return;
+
+            let bpm;
+            switch (speed) {
+                case 'fast': bpm = 120; break;
+                case 'med': bpm = 60; break;
+                case 'slow':
+                default:
+                    bpm = 30; break;
+            }
+            
+            const ticksPerSecond = (bpm * 24) / 60;
+            const intervalTime = 1000 / ticksPerSecond;
+            
+            midiClockInterval = setInterval(() => {
+                if (launchpadOutput) {
+                    launchpadOutput.send([248]); // MIDI Clock tick message
+                } else {
+                    clearInterval(midiClockInterval); 
+                }
+            }, intervalTime);
+        }
+        
+        function setPadColor(note, color, mode = 'static') {
+            if (!launchpadOutput) return;
+            
+            if (mode === 'static') {
+                launchpadOutput.send([146, note, 0]); // Pulse Off
+                launchpadOutput.send([144, note, color]); // Static On
+            } else if (mode === 'pulse') {
+                launchpadOutput.send([144, note, 0]); // Static Off
+                launchpadOutput.send([146, note, color]); // Pulse On
+            }
+        }
+        
+        function clearLaunchpadGrid(deepClear = false) {
+            if (!launchpadOutput) return;
+            
+            for (const note of launchpadGridNotes) {
+                setPadColor(note, COLORS.OFF);
+            }
+            if (deepClear) {
+                for (const note of launchpadCCNotes) {
+                    setPadColor(note, COLORS.OFF);
+                }
+            }
+        }
+
+        // NEW: Flash grid on task end
+        function flashPadGrid(count = 3) {
+            if (!launchpadOutput || !flashOnEnd || count <= 0) {
+                clearLaunchpadGrid();
+                return;
+            }
+            
+            // Turn all pads to the flash color
+            for (const note of launchpadGridNotes) {
+                setPadColor(note, currentPadColor, 'static');
+            }
+            
+            // After 150ms, turn them all off
+            setTimeout(() => {
+                clearLaunchpadGrid();
+                
+                // After another 150ms, call the next blink
+                setTimeout(() => {
+                    flashPadGrid(count - 1); // Recursive call
+                }, 150);
+            }, 150);
+        }
+
+        function updateLaunchpadCountdown() {
+            if (countdownPaused || !launchpadOutput || timePerPad === 0) {
+                return;
+            }
+            
+            const elapsed = Date.now() - countdownStartTime;
+            const padsToRemove = Math.floor(elapsed / timePerPad);
+
+            if (padsToRemove === lastPadsLit) return; 
+            lastPadsLit = padsToRemove;
+            
+            const currentRow = Math.floor(padsToRemove / 8);
+
+            for (let i = 0; i < 64; i++) {
+                const note = launchpadGridNotes[i];
+                
+                if (i < padsToRemove) {
+                    // Pad is "empty"
+                    setPadColor(note, COLORS.OFF, 'static');
+                } else {
+                    // Pad is "full" or "current"
+                    let mode = 'static';
+                    
+                    if (currentPulseMode === 'all') {
+                        mode = 'pulse';
+                    } else if (currentPulseMode === 'row') {
+                        const padRow = Math.floor(i / 8);
+                        if (padRow === currentRow) {
+                            mode = 'pulse';
+                        }
+                    } else if (currentPulseMode === 'current' && i === padsToRemove) {
+                        mode = 'pulse';
+                    }
+                    
+                    setPadColor(note, currentPadColor, mode);
+                }
+            }
+            
+            if (padsToRemove >= 64) {
+                // This will trigger the end-of-task logic, which calls flashPadGrid
+            }
+        }
+        
+        // --- UI & TIME FUNCTIONS ---
+        function updateCurrentTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            
+            currentTimeDisplay.innerHTML = `
+                ${String(hours).padStart(2, '0')}:${minutes}:${seconds}
+                <span class="text-3xl opacity-80">${ampm}</span>
+            `;
+        }
+
+        function formatTime(ms, showMillis = true) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const totalMinutes = Math.floor(totalSeconds / 60);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            const seconds = totalSeconds % 60;
+            const milliseconds = ms % 1000;
+            
+            const paddedMinutes = String(minutes).padStart(2, '0');
+            const paddedSeconds = String(seconds).padStart(2, '0');
+            const paddedMillis = String(milliseconds).padStart(3, '0');
+
+            let timeString = '';
+            
+            if (hours > 0) {
+                timeString += `${String(hours).padStart(2, '0')}:`;
+            }
+            timeString += `${paddedMinutes}:${paddedSeconds}`;
+            
+            if (showMillis) {
+                timeString += `<span class="text-2xl timer-accent-color">.${paddedMillis}</span>`;
+            }
+            return timeString;
+        }
+
+        // --- THEME/COLOR CHANGE FUNCTION ---
+        function applyTheme(hexColor) {
+            const root = document.documentElement;
+            
+            // For white text, we need a dark accent, otherwise use the accent
+            const isLight = hexColor === '#F7F6F7';
+            const accentDark = isLight ? '#3b5998' : hexColor;
+            const accentLight = isLight ? '#F7F6F7' : hexColor;
+            const mainTextColor = isLight ? '#0E0E34' : '#F7F6F7';
+            
+            // Create RGB for box-shadow
+            let r = 0, g = 0, b = 0;
+            if (hexColor.startsWith('#')) {
+                const hex = hexColor.substring(1);
+                r = parseInt(hex.substring(0, 2), 16);
+                g = parseInt(hex.substring(2, 4), 16);
+                b = parseInt(hex.substring(4, 6), 16);
+            }
+            
+            root.style.setProperty('--color-accent', accentLight);
+            root.style.setProperty('--color-accent-dark', accentDark);
+            root.style.setProperty('--color-accent-rgb', `${r}, ${g}, ${b}`);
+            
+            // Adjust borders and text for light theme
+            root.style.setProperty('--color-border-light', isLight ? '#a0aec0' : '#252E8A');
+            root.style.setProperty('--color-border-medium', isLight ? '#a0aec0' : '#252E8A');
+            root.style.setProperty('--color-text-light', mainTextColor);
+            root.style.setProperty('--color-text-dim', isLight ? '#4a5568' : '#a0aec0'); // gray-700 or gray-400
+            
+            // Specific overrides for white theme
+            document.getElementById('current-time-display').style.color = isLight ? '#0E0E34' : '#F7F6F7';
+        }
+
+        // --- TIME ON TASK (STOPWATCH) ---
+        totStartPauseBtn.addEventListener('click', () => {
+            totRunning = !totRunning;
+            if (totRunning) {
+                totStartPauseBtn.textContent = 'Pause';
+                totLastTimestamp = Date.now();
+                totInterval = setInterval(updateTot, 30);
+            } else {
+                totStartPauseBtn.textContent = 'Start';
+                clearInterval(totInterval);
+            }
+        });
+
+        totResetBtn.addEventListener('click', () => {
+            totRunning = false;
+            totStartPauseBtn.textContent = 'Start';
+            clearInterval(totInterval);
+            totMilliseconds = 0;
+            updateTotDisplay();
+        });
+
+        function updateTot() {
+            const now = Date.now();
+            const delta = now - totLastTimestamp;
+            totLastTimestamp = now;
+            totMilliseconds += delta;
+            updateTotDisplay();
+        }
+
+        function updateTotDisplay() {
+            totDisplay.innerHTML = formatTime(totMilliseconds, true);
+        }
+
+        // --- MAIN COUNTDOWN (TIMER) ---
+        function setDefaultCountdown(minutes) {
+            const ms = minutes * 60 * 1000;
+            countdownMilliseconds = ms;
+            countdownTotalDuration = ms;
+            updateCountdownDisplay();
+        }
+
+        function updateLaunchpadWithStaticTime() {
+            if (!launchpadOutput) return;
+            clearLaunchpadGrid();
+            for (const note of launchpadGridNotes) {
+                setPadColor(note, currentPadColor, 'static');
+            }
+        }
+
+        function startCountdown(minutes) {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            playTick();
+            countdownMilliseconds = minutes * 60 * 1000;
+            countdownTotalDuration = countdownMilliseconds;
+            updateCountdownDisplay();
+            
+            countdownPaused = false;
+            cdLastTimestamp = Date.now();
+            countdownStartTime = Date.now();
+            
+            // Prep Launchpad
+            timePerPad = countdownTotalDuration / 64;
+            lastPadsLit = -1;
+            
+            if (launchpadOutput) {
+                for (let i = 0; i < 64; i++) {
+                    const note = launchpadGridNotes[i];
+                    let mode = 'static';
+                    if (currentPulseMode === 'all') {
+                        mode = 'pulse';
+                    } else if (currentPulseMode === 'row' && i < 8) { // Pulse first row
+                         mode = 'pulse';
+                    } else if (currentPulseMode === 'current' && i === 0) {
+                        mode = 'pulse';
+                    }
+                    setPadColor(note, currentPadColor, mode);
+                }
+            }
+            
+            cdLastTimestamp = Date.now();
+            countdownInterval = setInterval(() => {
+                if (!countdownPaused) {
+                    const now = Date.now();
+                    const delta = now - cdLastTimestamp;
+                    cdLastTimestamp = now;
+                    countdownMilliseconds -= delta;
+                    
+                    if (countdownMilliseconds <= 0) {
+                        // Task/Countdown Finished
+                        countdownMilliseconds = 0;
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                        countdownPaused = true;
+                        playAlarm();
+                        
+                        // NEW: Flash grid if enabled
+                        if (flashOnEnd) {
+                            flashPadGrid(3);
+                        } else {
+                            clearLaunchpadGrid();
+                        }
+                        
+                        // Check if it was part of a queue
+                        if (currentTaskIndex !== -1) {
+                            // Task from queue finished
+                            taskQueue[currentTaskIndex].completed = true;
+                            renderTaskList();
+                            
+                            if (currentTaskIndex + 1 < taskQueue.length) {
+                                // Move to next task
+                                currentTaskIndex++;
+                                startTask(currentTaskIndex);
+                            } else {
+                                // Queue finished
+                                currentTaskIndex = -1;
+                                startQueueBtn.disabled = false;
+                                showMessage("Task Queue complete!", "success");
+                                setDefaultCountdown(60);
+                                if (launchpadOutput) updateLaunchpadWithStaticTime();
+                            }
+                        } else {
+                            // Standalone countdown finished
+                            showMessage("Countdown complete!", "info");
+                            setDefaultCountdown(60);
+                            if (launchpadOutput) updateLaunchpadWithStaticTime();
+                        }
+                    }
+                    
+                    updateCountdownDisplay();
+                    updateLaunchpadCountdown();
+                }
+            }, 100);
+        }
+        
+        function updateCountdownDisplay() {
+            countdownDisplay.innerHTML = formatTime(countdownMilliseconds, true);
+        }
+
+        // --- TASK MODULE ---
+        document.querySelectorAll('.quick-name-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                taskNameInput.value = button.textContent;
+            });
+        });
+
+        document.querySelectorAll('.quick-time-add-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                taskTimeInput.value = button.dataset.minutes;
+            });
+        });
+
+        // --- NEW: Live Pad Control Listeners ---
+        document.querySelectorAll('.pad-color-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.pad-color-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                currentPadColor = parseInt(button.dataset.colorCode, 10);
+                const themeHex = button.dataset.themeHex;
+                applyTheme(themeHex);
+                
+                if (!countdownPaused && launchpadOutput) {
+                    lastPadsLit = -1; // Force redraw
+                    updateLaunchpadCountdown();
+                } else if (launchpadOutput) {
+                    updateLaunchpadWithStaticTime();
+                }
+            });
+        });
+
+        pulseModeBtn.addEventListener('click', () => {
+            if (currentPulseMode === 'current') {
+                currentPulseMode = 'row';
+                pulseModeBtn.textContent = 'Mode: Pulse Row';
+            } else if (currentPulseMode === 'row') {
+                currentPulseMode = 'all';
+                pulseModeBtn.textContent = 'Mode: Pulse All';
+            } else {
+                currentPulseMode = 'current';
+                pulseModeBtn.textContent = 'Mode: Pulse Current';
+            }
+            
+            if (!countdownPaused && launchpadOutput) {
+                lastPadsLit = -1; // Force redraw
+                updateLaunchpadCountdown();
+            }
+        });
+
+        pulseSpeedBtn.addEventListener('click', () => {
+            if (currentPulseSpeed === 'slow') {
+                currentPulseSpeed = 'med';
+                pulseSpeedBtn.textContent = 'Speed: Med';
+            } else if (currentPulseSpeed === 'med') {
+                currentPulseSpeed = 'fast';
+                pulseSpeedBtn.textContent = 'Speed: Fast';
+            } else {
+                currentPulseSpeed = 'slow';
+                pulseSpeedBtn.textContent = 'Speed: Slow';
+            }
+            // Apply the new speed live
+            setMidiClockSpeed(currentPulseSpeed);
+        });
+
+        taskAlarmBtn.addEventListener('click', () => {
+            flashOnEnd = !flashOnEnd;
+            if (flashOnEnd) {
+                taskAlarmBtn.textContent = 'Flash Pad: On';
+                taskAlarmBtn.classList.add('active');
+            } else {
+                taskAlarmBtn.textContent = 'Flash Pad: Off';
+                taskAlarmBtn.classList.remove('active');
+            }
+        });
+        
+        addTaskBtn.addEventListener('click', () => {
+            const name = taskNameInput.value.trim();
+            const time = parseInt(taskTimeInput.value, 10);
+
+            if (name && !isNaN(time) && time > 0) {
+                taskQueue.push({ name, time, completed: false });
+                renderTaskList();
+                taskNameInput.value = '';
+                taskTimeInput.value = '60'; // Reset to default
+            } else {
+                showMessage("Invalid task name or time", "error");
+            }
+        });
+        
+        startQueueBtn.addEventListener('click', () => {
+            if (taskQueue.length > 0) {
+                // Find first uncompleted task
+                const firstTaskIndex = taskQueue.findIndex(task => !task.completed);
+                
+                if (firstTaskIndex !== -1) {
+                    currentTaskIndex = firstTaskIndex;
+                    startTask(currentTaskIndex);
+                    startQueueBtn.disabled = true;
+                } else {
+                    showMessage("All tasks are already completed.", "info");
+                }
+            } else {
+                showMessage("No tasks in queue", "error");
+            }
+        });
+
+        function renderTaskList() {
+            taskListDiv.innerHTML = '';
+            taskQueue.forEach((task, index) => {
+                const taskEl = document.createElement('div');
+                taskEl.className = `task-item flex justify-between items-center ${index === currentTaskIndex ? 'active' : ''}`;
+                
+                taskEl.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        ${task.completed ? 
+                            `<svg class="w-5 h-5" style="color: var(--color-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>` :
+                            `<svg class="w-5 h-5" style="color: var(--color-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                        }
+                        <span class="font-medium ${task.completed ? 'line-through' : ''}">${task.name}</span>
+                        <span class="text-sm dim-text">(${task.time} min)</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn pad-option-btn" onclick="startTask(${index})">Start</button>
+                        <button class="btn pad-option-btn" onclick="deleteTask(${index})">Del</button>
+                    </div>
+                `;
+                taskListDiv.appendChild(taskEl);
+            });
+        }
+        
+        function startTask(index) {
+            if (index < 0 || index >= taskQueue.length) return;
+            
+            // Stop current task if any
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            currentTaskIndex = index;
+            const task = taskQueue[index];
+            
+            // Un-complete it if we are re-starting it
+            task.completed = false;
+            
+            showMessage(`Starting task: ${task.name}`, "info");
+            
+            // Start main countdown for this task
+            startCountdown(task.time);
+            
+            renderTaskList(); // Render *after* setting currentTaskIndex
+        }
+
+        function deleteTask(index) {
+            taskQueue.splice(index, 1);
+            if (index === currentTaskIndex) {
+                if (countdownInterval) clearInterval(countdownInterval);
+                currentTaskIndex = -1;
+                setDefaultCountdown(60);
+                if(launchpadOutput) updateLaunchpadWithStaticTime();
+            } else if (index < currentTaskIndex) {
+                currentTaskIndex--;
+            }
+            renderTaskList();
+        }
+        
+        // --- UTILITY ---
+        function showMessage(message, type = 'info') {
+            if (messageTimeout) clearTimeout(messageTimeout);
+            
+            messageBox.textContent = message;
+            messageBox.classList.remove('text-red-400', 'main-accent-text');
+            
+            if (type === 'success') {
+                messageBox.classList.add('main-accent-text');
+            } else if (type === 'error') {
+                messageBox.classList.add('text-red-400');
+            } else {
+                messageBox.classList.add('main-accent-text');
+            }
+
+            messageTimeout = setTimeout(() => {
+                messageBox.textContent = '';
+            }, 3000);
+        }
+
+    </script>
+</body>
+</html>
