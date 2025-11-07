@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow Timer</title>
+    <!-- Title Changed -->
+    <title>TaskFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,6 +20,7 @@
             --color-accent-dark: #3b5998;
             --color-text-light: #F7F6F7;
             --color-text-dim: #a0aec0; /* gray-400 */
+            --color-accent-rgb: 80, 127, 203; /* Default blue rgb */
         }
 
         body {
@@ -54,6 +56,7 @@
             border: 1px solid var(--color-accent);
             box-shadow: 0 0 25px rgba(var(--color-accent-rgb), 0.3);
             border-radius: 0.75rem; /* 12px */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
         
         /* Module base style */
@@ -62,6 +65,7 @@
             border: 1px solid var(--color-border-medium);
             border-radius: 0.5rem; /* 8px */
             min-height: 150px;
+            transition: border-color 0.3s ease;
         }
 
         /* Timer display font */
@@ -70,9 +74,7 @@
             font-weight: 700;
             letter-spacing: -0.02em;
         }
-        .timer-accent-color {
-            color: var(--color-accent-dark);
-        }
+        /* REMOVED: .timer-accent-color style block removed */
         
         /* Button Styles */
         .btn {
@@ -87,17 +89,22 @@
         .btn:hover {
             background-color: var(--color-accent);
             color: var(--color-text-light);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(var(--color-accent-rgb), 0.2);
         }
         .btn:disabled {
             border-color: var(--color-border-light);
             color: var(--color-border-light);
             cursor: not-allowed;
             background-color: transparent;
+            transform: none;
+            box-shadow: none;
         }
         .btn.active {
             background-color: var(--color-accent);
             color: var(--color-text-light);
             font-weight: 700;
+            box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.3);
         }
         
         /* Input Styles */
@@ -107,7 +114,8 @@
             border-radius: 0.375rem; /* 6px */
             padding: 0.5rem 0.75rem;
             width: 100%;
-            color: var(--color-text-light);
+            /* MODIFIED: Forced input text to white */
+            color: #F7F6F7;
             transition: border-color 0.2s;
             /* Remove number spinners */
             -moz-appearance: textfield;
@@ -146,10 +154,22 @@
             font-size: 0.875rem; /* Smaller text */
         }
         
-        .header-text { color: var(--color-accent); }
-        .dim-text { color: var(--color-text-dim); }
-        .main-accent-text { color: var(--color-accent); }
-        .main-accent-text-light { color: var(--color-text-light); }
+        .header-text { 
+            color: var(--color-accent);
+            transition: color 0.3s ease;
+        }
+        .dim-text { 
+            color: var(--color-text-dim);
+            transition: color 0.3s ease;
+        }
+        .main-accent-text { 
+            color: var(--color-accent);
+            transition: color 0.3s ease;
+        }
+        .main-accent-text-light { 
+            color: var(--color-text-light);
+            transition: color 0.3s ease;
+        }
 
     </style>
 </head>
@@ -158,7 +178,8 @@
     <!-- Audio Initialization Modal -->
     <div id="audio-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
         <div class="main-container p-8 text-center">
-            <h2 class="text-3xl font-bold mb-4 header-text">Welcome to TaskFlow Timer</h2>
+            <!-- Text Changed -->
+            <h2 class="text-3xl font-bold mb-4 header-text">Welcome to TaskFlow</h2>
             <p class="text-lg mb-8">Click the button to initialize the application and enable audio alerts.</p>
             <button id="init-app-btn" class="btn text-xl px-8 py-4">Initialize System</button>
         </div>
@@ -169,7 +190,8 @@
         
         <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b" style="border-color: var(--color-border-light);">
-            <h1 class="text-4xl font-bold header-text">TaskFlow Timer</h1>
+            <!-- Title Changed -->
+            <h1 class="text-4xl font-bold header-text">TaskFlow</h1>
             <!-- Connect Button -->
             <button id="connect-launchpad-btn" class="btn px-4 py-2 mt-4 md:mt-0">Connect Pad</button>
             <!-- Message Area -->
@@ -188,28 +210,29 @@
                 </div>
             </div>
 
-            <!-- Module 2: Time on Task (Stopwatch) -->
-            <div class="module p-6 rounded-lg">
+            <!-- Module 2: Time on Task (Stopwatch) - MODIFIED -->
+            <div class="module p-6 rounded-lg flex flex-col justify-center items-center">
                 <h2 class="text-xl font-semibold dim-text mb-3 text-center">Time on Task</h2>
                 <div id="time-on-task-display" class="timer-display text-3xl md:text-4xl font-bold text-center mb-4 main-accent-text">
                     00:00:00<span class="text-2xl timer-accent-color">.000</span>
                 </div>
-                <div class="flex justify-center space-x-2">
-                    <button id="tot-start-pause-btn" class="btn w-24">Start</button>
-                    <button id="tot-reset-btn" class="btn w-24">Reset</button>
-                </div>
+                <!-- Removed buttons, this is now a display only -->
             </div>
 
-            <!-- Module 3: Main Countdown (Timer) - NOW DISPLAY ONLY -->
+            <!-- Module 3: Main Countdown (Timer) - MODIFIED -->
             <div class="module p-6 rounded-lg flex flex-col justify-center items-center">
                 <h2 class="text-xl font-semibold dim-text mb-3">Active Task</h2>
                 <div id="countdown-display" class="timer-display text-4xl md:text-5xl font-bold text-center main-accent-text">
                     60:00<span class="text-3xl timer-accent-color">.000</span>
                 </div>
+                <!-- NEW: Pause/Resume Button -->
+                <div class="flex justify-center space-x-2 mt-4">
+                    <button id="cd-pause-resume-btn" class="btn w-32" disabled>Start Task</button>
+                </div>
             </div>
         </div>
 
-        <!-- NEW: Live Pad Control Module -->
+        <!-- Live Pad Control Module - MODIFIED -->
         <div class="module p-6 rounded-lg mb-6">
             <h2 class="text-2xl font-bold mb-4 pb-4 header-text text-center border-b" style="border-color: var(--color-border-light);">Live Pad Control</h2>
             <div class="flex flex-wrap gap-x-6 gap-y-4 items-end justify-center">
@@ -218,10 +241,17 @@
                 <div>
                     <label class="block text-sm font-medium dim-text mb-2">Pad Color</label>
                     <div class="flex flex-wrap gap-2">
+                        <!-- Original Colors -->
                         <button class="btn pad-option-btn pad-color-btn active" data-color-name="Blue" data-color-code="45" data-theme-hex="#5A7FCB">Blue</button>
                         <button class="btn pad-option-btn pad-color-btn" data-color-name="Med Blue" data-color-code="42" data-theme-hex="#4a69bd">Med Blue</button>
                         <button class="btn pad-option-btn pad-color-btn" data-color-name="Lt Blue" data-color-code="37" data-theme-hex="#7aace8">Lt Blue</button>
                         <button class="btn pad-option-btn pad-color-btn" data-color-name="Green" data-color-code="26" data-theme-hex="#2ecc71">Green</button>
+                        <!-- New Colors -->
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="Red" data-color-code="5" data-theme-hex="#E74C3C">Red</button>
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="Yellow" data-color-code="13" data-theme-hex="#F1C40F">Yellow</button>
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="Pink" data-color-code="95" data-theme-hex="#E082B4">Pink</button>
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="Dk Green" data-color-code="123" data-theme-hex="#27AE60">Dk Green</button>
+                        <button class="btn pad-option-btn pad-color-btn" data-color-name="Grey" data-color-code="117" data-theme-hex="#95A5A6">Grey</button>
                         <button class="btn pad-option-btn pad-color-btn" data-color-name="White" data-color-code="3" data-theme-hex="#F7F6F7">White</button>
                     </div>
                 </div>
@@ -250,9 +280,10 @@
         <!-- Bottom Modules Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            <!-- Add New Task Module -->
+            <!-- Add New Task Module - MODIFIED -->
             <div class="module p-6 rounded-lg">
-                <h2 class="text-2xl font-bold mb-4 header-text">Add Task Module</h2>
+                <!-- Text Changed -->
+                <h2 class="text-2xl font-bold mb-4 header-text">Add Task</h2>
                 
                 <div class="space-y-4">
                     <!-- Quick Task Name -->
@@ -323,18 +354,15 @@
         // Current Time
         const currentTimeDisplay = document.getElementById('current-time-display');
 
-        // Time on Task (Stopwatch)
+        // Time on Task (Stopwatch) - MODIFIED
         const totDisplay = document.getElementById('time-on-task-display');
-        const totStartPauseBtn = document.getElementById('tot-start-pause-btn');
-        const totResetBtn = document.getElementById('tot-reset-btn');
-        let totInterval;
-        let totMilliseconds = 0;
-        let totLastTimestamp;
-        let totRunning = false;
+        // Removed totInterval, totMilliseconds, etc. This is now driven by the main countdown.
 
-        // Main Countdown (Timer)
+        // Main Countdown (Timer) - MODIFIED
         const countdownDisplay = document.getElementById('countdown-display');
-        let countdownInterval;
+        const cdPauseResumeBtn = document.getElementById('cd-pause-resume-btn'); // NEW
+        
+        let countdownLoopId; // NEW: for requestAnimationFrame
         let countdownMilliseconds = 0;
         let countdownTotalDuration = 0;
         let countdownStartTime = 0;
@@ -356,21 +384,19 @@
         let launchpadOutput = null;
         let midiClockInterval = null;
         
-        // --- NEW: Live Pad Control State ---
+        // Live Pad Control State
         let currentPadColor = 45; // Default to Blue
         let currentPulseMode = 'current'; // 'current', 'row', or 'all'
         let currentPulseSpeed = 'slow'; // 'slow', 'med', 'fast'
         let flashOnEnd = true; // Default to On
+        let pulsingPadNote = -1; // NEW: Tracks the single pulsing pad
         
-        // NEW: Live Pad Control DOM Elements
+        // Live Pad Control DOM Elements
         const pulseModeBtn = document.getElementById('pulse-mode-btn');
-        const pulseSpeedBtn = document.getElementById('pulse-speed-btn'); // New single button
+        const pulseSpeedBtn = document.getElementById('pulse-speed-btn');
         const taskAlarmBtn = document.getElementById('task-alarm-btn');
         
-        const COLORS = {
-            OFF: 0,
-        };
-        // The 64-pad grid, in order from top-left to bottom-right
+        const COLORS = { OFF: 0 };
         const launchpadGridNotes = [
             81, 82, 83, 84, 85, 86, 87, 88, // Row 0
             71, 72, 73, 74, 75, 76, 77, 78, // Row 1
@@ -394,8 +420,7 @@
             initAudio();
             audioModal.style.display = 'none';
             isAudioInitialized = true;
-            setDefaultCountdown(60);
-            countdownDisplay.innerHTML = formatTime(60 * 60 * 1000, true);
+            resetCountdownDisplay(); // Use new reset function
         });
 
         setInterval(updateCurrentTime, 1000);
@@ -405,7 +430,8 @@
         function initAudio() {
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                loadSound('https://www.myinstants.com/media/sounds/hollow-what-a-thrill-metal-gear-solid-3.mp3', (buffer) => {
+                // Using a more reliable "end" sound
+                loadSound('https://sfxcontent.s3.amazonaws.com/sound-effects/notification-decorative-E.mp3', (buffer) => {
                     alarmBuffer = buffer;
                 });
                 loadSound('https://sfxcontent.s3.amazonaws.com/sound-effects/pop-drip-click-sound.mp3', (buffer) => {
@@ -464,6 +490,7 @@
                         connectLaunchpadBtn.disabled = true;
                         connectLaunchpadBtn.textContent = "Pad Connected";
                         
+                        // Enter "Programmer" mode
                         launchpadOutput.send([240, 0, 32, 41, 2, 13, 14, 1, 247]);
                         
                         setTimeout(() => {
@@ -532,71 +559,98 @@
                     setPadColor(note, COLORS.OFF);
                 }
             }
+            pulsingPadNote = -1; // Clear pulsing pad state
         }
 
-        // NEW: Flash grid on task end
         function flashPadGrid(count = 3) {
             if (!launchpadOutput || !flashOnEnd || count <= 0) {
                 clearLaunchpadGrid();
+                updateLaunchpadWithStaticTime(); // Reset to full grid
                 return;
             }
             
-            // Turn all pads to the flash color
             for (const note of launchpadGridNotes) {
                 setPadColor(note, currentPadColor, 'static');
             }
             
-            // After 150ms, turn them all off
             setTimeout(() => {
                 clearLaunchpadGrid();
-                
-                // After another 150ms, call the next blink
                 setTimeout(() => {
                     flashPadGrid(count - 1); // Recursive call
                 }, 150);
             }, 150);
         }
 
+        // --- NEW: Pulse Pad Controller ---
+        function setPulsePad(padsToRemove) {
+            if (!launchpadOutput || currentPulseMode === 'all') {
+                 // Turn off any single-pad pulse if we switch to 'all'
+                if (pulsingPadNote !== -1) {
+                    setPadColor(pulsingPadNote, currentPadColor, 'static');
+                    pulsingPadNote = -1;
+                }
+                return;
+            }
+
+            // 1. Turn OFF the previously pulsing pad
+            if (pulsingPadNote !== -1) {
+                setPadColor(pulsingPadNote, currentPadColor, 'static'); // Turn it back to static
+                pulsingPadNote = -1;
+            }
+
+            // Determine the new pad to pulse
+            let newPulseNote = -1;
+            if (currentPulseMode === 'row') {
+                const currentRow = Math.floor(padsToRemove / 8);
+                const firstPadOfRow = currentRow * 8;
+                if (firstPadOfRow < 64) {
+                    newPulseNote = launchpadGridNotes[firstPadOfRow];
+                }
+            } else if (currentPulseMode === 'current') {
+                if (padsToRemove < 64) {
+                    newPulseNote = launchpadGridNotes[padsToRemove];
+                }
+            }
+            
+            // 2. Turn ON the newly pulsing pad
+            if (newPulseNote !== -1) {
+                pulsingPadNote = newPulseNote;
+                setPadColor(pulsingPadNote, currentPadColor, 'pulse');
+            }
+        }
+
+        // --- MODIFIED: Launchpad Countdown Updater ---
         function updateLaunchpadCountdown() {
             if (countdownPaused || !launchpadOutput || timePerPad === 0) {
                 return;
             }
             
             const elapsed = Date.now() - countdownStartTime;
-            const padsToRemove = Math.floor(elapsed / timePerPad);
+            const padsToRemove = Math.min(64, Math.floor(elapsed / timePerPad));
 
             if (padsToRemove === lastPadsLit) return; 
-            lastPadsLit = padsToRemove;
             
-            const currentRow = Math.floor(padsToRemove / 8);
-
+            // Call the new pulse controller
+            setPulsePad(padsToRemove);
+            
+            // Update static pads
             for (let i = 0; i < 64; i++) {
                 const note = launchpadGridNotes[i];
                 
                 if (i < padsToRemove) {
-                    // Pad is "empty"
                     setPadColor(note, COLORS.OFF, 'static');
-                } else {
-                    // Pad is "full" or "current"
-                    let mode = 'static';
-                    
-                    if (currentPulseMode === 'all') {
-                        mode = 'pulse';
-                    } else if (currentPulseMode === 'row') {
-                        const padRow = Math.floor(i / 8);
-                        if (padRow === currentRow) {
-                            mode = 'pulse';
-                        }
-                    } else if (currentPulseMode === 'current' && i === padsToRemove) {
-                        mode = 'pulse';
-                    }
-                    
-                    setPadColor(note, currentPadColor, mode);
+                } else if (currentPulseMode === 'all') {
+                    setPadColor(note, currentPadColor, 'pulse');
+                } else if (i !== pulsingPadNote) { // Don't override the pulsing pad
+                    setPadColor(note, currentPadColor, 'static');
                 }
             }
             
+            lastPadsLit = padsToRemove;
+            
             if (padsToRemove >= 64) {
-                // This will trigger the end-of-task logic, which calls flashPadGrid
+                // This state will be caught by the main countdownLoop
+                // which will trigger the end-of-task logic
             }
         }
         
@@ -637,22 +691,17 @@
             timeString += `${paddedMinutes}:${paddedSeconds}`;
             
             if (showMillis) {
-                timeString += `<span class="text-2xl timer-accent-color">.${paddedMillis}</span>`;
+                /* MODIFIED: Removed timer-accent-color class to inherit parent color */
+                timeString += `<span class="text-2xl">.${paddedMillis}</span>`;
             }
             return timeString;
         }
 
-        // --- THEME/COLOR CHANGE FUNCTION ---
+        // --- NEW: Robust Theme/Color Change Function ---
         function applyTheme(hexColor) {
             const root = document.documentElement;
             
-            // For white text, we need a dark accent, otherwise use the accent
-            const isLight = hexColor === '#F7F6F7';
-            const accentDark = isLight ? '#3b5998' : hexColor;
-            const accentLight = isLight ? '#F7F6F7' : hexColor;
-            const mainTextColor = isLight ? '#0E0E34' : '#F7F6F7';
-            
-            // Create RGB for box-shadow
+            // Convert hex to RGB
             let r = 0, g = 0, b = 0;
             if (hexColor.startsWith('#')) {
                 const hex = hexColor.substring(1);
@@ -660,6 +709,15 @@
                 g = parseInt(hex.substring(2, 4), 16);
                 b = parseInt(hex.substring(4, 6), 16);
             }
+            
+            // Calculate luminance (0-255)
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+            const isLight = luminance > 140; // Threshold for light/dark
+            
+            const accentLight = hexColor;
+            // Use a darker shade for the accent-dark, or a default dark blue if bg is light
+            const accentDark = isLight ? '#3b5998' : `color-mix(in srgb, ${hexColor} 80%, black)`;
+            const mainTextColor = isLight ? '#0E0E34' : '#F7F6F7';
             
             root.style.setProperty('--color-accent', accentLight);
             root.style.setProperty('--color-accent-dark', accentDark);
@@ -672,48 +730,42 @@
             root.style.setProperty('--color-text-dim', isLight ? '#4a5568' : '#a0aec0'); // gray-700 or gray-400
             
             // Specific overrides for white theme
-            document.getElementById('current-time-display').style.color = isLight ? '#0E0E34' : '#F7F6F7';
+            /* MODIFIED: Forced current time display to always be white */
+            document.getElementById('current-time-display').style.color = '#F7F6F7';
         }
 
         // --- TIME ON TASK (STOPWATCH) ---
-        totStartPauseBtn.addEventListener('click', () => {
-            totRunning = !totRunning;
-            if (totRunning) {
-                totStartPauseBtn.textContent = 'Pause';
-                totLastTimestamp = Date.now();
-                totInterval = setInterval(updateTot, 30);
+        // This section is now removed as ToT is driven by the main countdown
+        
+        // --- NEW: Pause/Resume Button Listener ---
+        cdPauseResumeBtn.addEventListener('click', () => {
+            if (countdownTotalDuration === 0) {
+                // If no task is active, try to start the queue
+                startQueueBtn.click();
             } else {
-                totStartPauseBtn.textContent = 'Start';
-                clearInterval(totInterval);
+                pauseCountdown(!countdownPaused); // Toggle pause state
             }
         });
 
-        totResetBtn.addEventListener('click', () => {
-            totRunning = false;
-            totStartPauseBtn.textContent = 'Start';
-            clearInterval(totInterval);
-            totMilliseconds = 0;
-            updateTotDisplay();
-        });
-
-        function updateTot() {
-            const now = Date.now();
-            const delta = now - totLastTimestamp;
-            totLastTimestamp = now;
-            totMilliseconds += delta;
-            updateTotDisplay();
-        }
-
-        function updateTotDisplay() {
-            totDisplay.innerHTML = formatTime(totMilliseconds, true);
-        }
-
         // --- MAIN COUNTDOWN (TIMER) ---
-        function setDefaultCountdown(minutes) {
-            const ms = minutes * 60 * 1000;
+
+        // NEW: Resets the countdown displays to default
+        function resetCountdownDisplay() {
+            const defaultMinutes = 60;
+            const ms = defaultMinutes * 60 * 1000;
             countdownMilliseconds = ms;
-            countdownTotalDuration = ms;
-            updateCountdownDisplay();
+            countdownTotalDuration = ms; 
+            
+            updateCountdownDisplay(); // Show 60:00
+            totDisplay.innerHTML = formatTime(0, true); // Reset elapsed time
+            
+            cdPauseResumeBtn.textContent = 'Start Task';
+            cdPauseResumeBtn.disabled = true; // Disabled until a task is queued/started
+            
+            if (launchpadOutput) {
+                clearLaunchpadGrid();
+                updateLaunchpadWithStaticTime(); // Show full grid
+            }
         }
 
         function updateLaunchpadWithStaticTime() {
@@ -725,9 +777,8 @@
         }
 
         function startCountdown(minutes) {
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
+            if (countdownLoopId) {
+                cancelAnimationFrame(countdownLoopId);
             }
             
             playTick();
@@ -744,77 +795,98 @@
             lastPadsLit = -1;
             
             if (launchpadOutput) {
-                for (let i = 0; i < 64; i++) {
-                    const note = launchpadGridNotes[i];
-                    let mode = 'static';
-                    if (currentPulseMode === 'all') {
-                        mode = 'pulse';
-                    } else if (currentPulseMode === 'row' && i < 8) { // Pulse first row
-                         mode = 'pulse';
-                    } else if (currentPulseMode === 'current' && i === 0) {
-                        mode = 'pulse';
-                    }
-                    setPadColor(note, currentPadColor, mode);
-                }
+                clearLaunchpadGrid();
+                updateLaunchpadCountdown(); // Initial draw
             }
             
-            cdLastTimestamp = Date.now();
-            countdownInterval = setInterval(() => {
-                if (!countdownPaused) {
-                    const now = Date.now();
-                    const delta = now - cdLastTimestamp;
-                    cdLastTimestamp = now;
-                    countdownMilliseconds -= delta;
-                    
-                    if (countdownMilliseconds <= 0) {
-                        // Task/Countdown Finished
-                        countdownMilliseconds = 0;
-                        clearInterval(countdownInterval);
-                        countdownInterval = null;
-                        countdownPaused = true;
-                        playAlarm();
-                        
-                        // NEW: Flash grid if enabled
-                        if (flashOnEnd) {
-                            flashPadGrid(3);
-                        } else {
-                            clearLaunchpadGrid();
-                        }
-                        
-                        // Check if it was part of a queue
-                        if (currentTaskIndex !== -1) {
-                            // Task from queue finished
-                            taskQueue[currentTaskIndex].completed = true;
-                            renderTaskList();
-                            
-                            if (currentTaskIndex + 1 < taskQueue.length) {
-                                // Move to next task
-                                currentTaskIndex++;
-                                startTask(currentTaskIndex);
-                            } else {
-                                // Queue finished
-                                currentTaskIndex = -1;
-                                startQueueBtn.disabled = false;
-                                showMessage("Task Queue complete!", "success");
-                                setDefaultCountdown(60);
-                                if (launchpadOutput) updateLaunchpadWithStaticTime();
-                            }
-                        } else {
-                            // Standalone countdown finished
-                            showMessage("Countdown complete!", "info");
-                            setDefaultCountdown(60);
-                            if (launchpadOutput) updateLaunchpadWithStaticTime();
-                        }
-                    }
-                    
-                    updateCountdownDisplay();
-                    updateLaunchpadCountdown();
+            cdPauseResumeBtn.textContent = 'Pause';
+            cdPauseResumeBtn.disabled = false;
+            
+            // Start the rAF loop
+            countdownLoop();
+        }
+
+        // NEW: Pause/Resume Function
+        function pauseCountdown(shouldPause) {
+            countdownPaused = shouldPause;
+            
+            if (countdownPaused) {
+                cdPauseResumeBtn.textContent = 'Resume';
+                if (countdownLoopId) {
+                    cancelAnimationFrame(countdownLoopId);
+                    countdownLoopId = null;
                 }
-            }, 100);
+                
+                if (launchpadOutput && pulsingPadNote !== -1) {
+                    // Turn off the pulsing light when paused, set to static
+                    setPadColor(pulsingPadNote, currentPadColor, 'static');
+                }
+            } else {
+                cdPauseResumeBtn.textContent = 'Pause';
+                
+                // Resume the rAF loop
+                cdLastTimestamp = Date.now(); // Reset last timestamp to prevent jump
+                countdownLoop();
+            }
+        }
+
+        // NEW: rAF Countdown Loop
+        function countdownLoop() {
+            if (countdownPaused) {
+                countdownLoopId = null;
+                return;
+            }
+
+            const now = Date.now();
+            const delta = now - cdLastTimestamp;
+            cdLastTimestamp = now;
+
+            countdownMilliseconds -= delta;
+
+            if (countdownMilliseconds <= 0) {
+                // Task/Countdown Finished
+                countdownMilliseconds = 0;
+                countdownPaused = true;
+                playAlarm();
+                
+                if (flashOnEnd) {
+                    flashPadGrid(3);
+                } else {
+                    clearLaunchpadGrid();
+                }
+                
+                if (currentTaskIndex !== -1) {
+                    taskQueue[currentTaskIndex].completed = true;
+                    renderTaskList();
+                    
+                    if (currentTaskIndex + 1 < taskQueue.length) {
+                        currentTaskIndex++;
+                        startTask(currentTaskIndex);
+                    } else {
+                        currentTaskIndex = -1;
+                        startQueueBtn.disabled = false;
+                        showMessage("Task Queue complete!", "success");
+                        resetCountdownDisplay();
+                    }
+                } else {
+                    showMessage("Countdown complete!", "info");
+                    resetCountdownDisplay();
+                }
+                
+            } else {
+                updateCountdownDisplay();
+                updateLaunchpadCountdown();
+                
+                // Schedule the next frame
+                countdownLoopId = requestAnimationFrame(countdownLoop);
+            }
         }
         
         function updateCountdownDisplay() {
             countdownDisplay.innerHTML = formatTime(countdownMilliseconds, true);
+            // NEW: Update Time on Task display
+            const elapsed = countdownTotalDuration - countdownMilliseconds;
+            totDisplay.innerHTML = formatTime(elapsed, true);
         }
 
         // --- TASK MODULE ---
@@ -830,7 +902,7 @@
             });
         });
 
-        // --- NEW: Live Pad Control Listeners ---
+        // --- Live Pad Control Listeners ---
         document.querySelectorAll('.pad-color-btn').forEach(button => {
             button.addEventListener('click', () => {
                 document.querySelectorAll('.pad-color-btn').forEach(btn => btn.classList.remove('active'));
@@ -840,11 +912,14 @@
                 const themeHex = button.dataset.themeHex;
                 applyTheme(themeHex);
                 
-                if (!countdownPaused && launchpadOutput) {
+                // Update launchpad visuals immediately
+                if (launchpadOutput) {
                     lastPadsLit = -1; // Force redraw
-                    updateLaunchpadCountdown();
-                } else if (launchpadOutput) {
-                    updateLaunchpadWithStaticTime();
+                    if (!countdownPaused) {
+                        updateLaunchpadCountdown();
+                    } else {
+                        updateLaunchpadWithStaticTime();
+                    }
                 }
             });
         });
@@ -878,7 +953,6 @@
                 currentPulseSpeed = 'slow';
                 pulseSpeedBtn.textContent = 'Speed: Slow';
             }
-            // Apply the new speed live
             setMidiClockSpeed(currentPulseSpeed);
         });
 
@@ -902,6 +976,11 @@
                 renderTaskList();
                 taskNameInput.value = '';
                 taskTimeInput.value = '60'; // Reset to default
+                
+                // If this is the first task, enable the start button
+                if (taskQueue.length === 1 && currentTaskIndex === -1) {
+                    cdPauseResumeBtn.disabled = false;
+                }
             } else {
                 showMessage("Invalid task name or time", "error");
             }
@@ -909,13 +988,13 @@
         
         startQueueBtn.addEventListener('click', () => {
             if (taskQueue.length > 0) {
-                // Find first uncompleted task
                 const firstTaskIndex = taskQueue.findIndex(task => !task.completed);
                 
                 if (firstTaskIndex !== -1) {
                     currentTaskIndex = firstTaskIndex;
                     startTask(currentTaskIndex);
                     startQueueBtn.disabled = true;
+                    cdPauseResumeBtn.disabled = false;
                 } else {
                     showMessage("All tasks are already completed.", "info");
                 }
@@ -933,10 +1012,10 @@
                 taskEl.innerHTML = `
                     <div class="flex items-center space-x-3">
                         ${task.completed ? 
-                            `<svg class="w-5 h-5" style="color: var(--color-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>` :
-                            `<svg class="w-5 h-5" style="color: var(--color-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                            `<svg class="w-5 h-5" style="color: var(--color-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>` :
+                            `<svg class="w-5 h-5" style="color: var(--color-accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
                         }
-                        <span class="font-medium ${task.completed ? 'line-through' : ''}">${task.name}</span>
+                        <span class-"font-medium ${task.completed ? 'line-through' : ''}">${task.name}</span>
                         <span class="text-sm dim-text">(${task.time} min)</span>
                     </div>
                     <div class="flex gap-2">
@@ -946,37 +1025,40 @@
                 `;
                 taskListDiv.appendChild(taskEl);
             });
+            
+            // Re-check start button state
+            if (taskQueue.length === 0) {
+                cdPauseResumeBtn.disabled = true;
+                cdPauseResumeBtn.textContent = 'Start Task';
+            }
         }
         
         function startTask(index) {
             if (index < 0 || index >= taskQueue.length) return;
             
-            // Stop current task if any
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
+            if (countdownLoopId) {
+                cancelAnimationFrame(countdownLoopId);
             }
             
             currentTaskIndex = index;
             const task = taskQueue[index];
-            
-            // Un-complete it if we are re-starting it
-            task.completed = false;
+            task.completed = false; // Un-complete it if re-starting
             
             showMessage(`Starting task: ${task.name}`, "info");
             
-            // Start main countdown for this task
             startCountdown(task.time);
             
-            renderTaskList(); // Render *after* setting currentTaskIndex
+            startQueueBtn.disabled = true; // Queue is running
+            renderTaskList(); 
         }
 
         function deleteTask(index) {
             taskQueue.splice(index, 1);
             if (index === currentTaskIndex) {
-                if (countdownInterval) clearInterval(countdownInterval);
+                if (countdownLoopId) cancelAnimationFrame(countdownLoopId);
                 currentTaskIndex = -1;
-                setDefaultCountdown(60);
-                if(launchpadOutput) updateLaunchpadWithStaticTime();
+                resetCountdownDisplay();
+                startQueueBtn.disabled = false;
             } else if (index < currentTaskIndex) {
                 currentTaskIndex--;
             }
